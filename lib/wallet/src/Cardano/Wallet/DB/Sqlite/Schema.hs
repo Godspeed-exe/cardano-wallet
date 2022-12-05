@@ -31,6 +31,7 @@ import Prelude
 import Cardano.Address.Script
     ( Cosigner, Script )
 import Cardano.Pool.Types
+    ( PoolId )
 import Cardano.Slotting.Slot
     ( SlotNo )
 import Cardano.Wallet.Address.Discovery.Shared
@@ -38,6 +39,7 @@ import Cardano.Wallet.Address.Discovery.Shared
 import Cardano.Wallet.DB.Sqlite.Types
     ( BlockHeight
     , BlockId
+    , DelegationStatusEnum (..)
     , HDPassphrase
     , TxId
     , TxSubmissionStatusEnum (..)
@@ -506,5 +508,12 @@ SubmissionsSlots
     submissionsSlotsWallet W.WalletId sql=wallet_id
 
     Primary submissionsSlotsWallet
+
+Delegations
+    delegationSlot SlotNo sql=slot
+    delegationStatus DelegationStatusEnum sql=status
+    delegationPool PoolId Maybe sql=pool
+
+    Primary delegationSlot
     deriving Show Generic Eq
 |]
