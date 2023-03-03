@@ -941,9 +941,7 @@ instance IsServerError (ErrInvalidDerivationIndex 'Soft level) where
 instance IsServerError (SelectionOutputError WalletSelectionContext) where
     toServerError (SelectionOutputError index info) = case info of
         SelectionOutputCoinInsufficient e ->
-            flip (apiErrorOldDeprecated err403)
-            selectionOutputCoinInsufficientMessage $
-            UtxoTooSmall ApiErrorTxOutputLovelaceInsufficient
+            apiError err403 $ UtxoTooSmall ApiErrorTxOutputLovelaceInsufficient
                 { txOutputIndex =
                     flip fromJustNote (intCastMaybe @Int @Word32 index) $
                         unwords
@@ -959,14 +957,6 @@ instance IsServerError (SelectionOutputError WalletSelectionContext) where
             toServerError e
         SelectionOutputTokenQuantityExceedsLimit e ->
             toServerError e
-      where
-        selectionOutputCoinInsufficientMessage = T.unwords
-            [ "One of the outputs you've specified has an ada quantity that is"
-            , "below the minimum required. Either increase the ada quantity to"
-            , "at least the minimum, or specify an ada quantity of zero, in"
-            , "which case the wallet will automatically assign the correct"
-            , "minimum ada quantity to the output."
-            ]
 
 instance IsServerError
     (SelectionOutputSizeExceedsLimitError WalletSelectionContext)
