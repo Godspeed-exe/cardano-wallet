@@ -17,7 +17,7 @@ import Prelude hiding
     ( (.) )
 
 import Cardano.Wallet.Api.Http.Server.Error
-    ( IsServerError (..), apiError, liftE, showT )
+    ( IsServerError (..), apiErrorOldDeprecated, liftE, showT )
 import Cardano.Wallet.Api.Types.Error
     ( ApiErrorInfo (UnexpectedError) )
 import Cardano.Wallet.Primitive.Types
@@ -74,7 +74,7 @@ newtype ErrParseCBOR = ErrParseCBOR DeserialiseFailure
 
 instance IsServerError ErrParseCBOR where
     toServerError (ErrParseCBOR df) =
-        apiError err500 UnexpectedError $ mconcat
+        apiErrorOldDeprecated err500 UnexpectedError $ mconcat
             [ "Error while trying to parse a transaction CBOR from the database"
             , showT df
             ]
