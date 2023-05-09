@@ -24,11 +24,9 @@ import Cardano.Pool.Types
 import Cardano.Slotting.Slot
     ( SlotNo )
 import Cardano.Wallet.DB.Sqlite.Schema
-    ( DelegationCertificate (DelegationCertificate)
-    , Delegations (..)
+    ( Delegations (..)
     , EntityField (..)
     , Key (DelegationsKey)
-    , StakeKeyCertificate (StakeKeyCertificate)
     )
 import Cardano.Wallet.DB.Sqlite.Types
     ( DelegationStatusEnum (..) )
@@ -164,6 +162,54 @@ readOldEncoding wid = do
             (Map.mapMaybeMissing $ \_ -> Just . This)
             (Map.mapMaybeMissing $ \_ -> Just . That)
             (Map.zipWithMaybeMatched $ \_ x y -> Just $ These x y)
+
+module … Store.Delegations.Store.Migration
+    ( migrateDelegation
+    )
+
+import Dont'Import'Shared'Types'For'Old'Data
+
+migrateDelegation :: Migration '3 '2 (SqlPersistT IO)
+
+-- copy & paste all relevant type definitions here
+
+data StakeKeyCertificate
+    = StakeKeyRegistration
+    | StakeKeyDeregistration
+    deriving (Generic, Show, Read, Eq)
+
+instance PersistField StakeKeyCertificate where
+    toPersistValue = toPersistValue . show
+    fromPersistValue = fromPersistValueRead
+
+instance PersistFieldSql StakeKeyCertificate where
+    sqlType _ = sqlType (Proxy @Text)
+
+share
+    [ mkPersist sqlSettings'
+    , mkMigrate "migrateAll"
+    ]
+    [persistLowerCase|
+-- Track whether the wallet's stake key is registered or not.
+StakeKeyCertificate
+    stakeKeyCertWalletId             W.WalletId            sql=wallet_id
+    stakeKeyCertSlot                 SlotNo                sql=slot
+    stakeKeyCertType                 W.StakeKeyCertificate sql=type
+
+    Primary stakeKeyCertWalletId stakeKeyCertSlot
+    -- Foreign Wallet OnDeleteCascade stakeKeyRegistration stakeKeyCertWalletId
+    deriving Show Generic
+
+-- Store known delegation certificates for a particular wallet
+DelegationCertificate
+    certWalletId             W.WalletId     sql=wallet_id
+    certSlot                 SlotNo         sql=slot
+    certPoolId               PoolId Maybe sql=delegation
+
+    Primary certWalletId certSlot
+    -- Foreign Wallet OnDeleteCascade delegationCertificate certWalletId
+    deriving Show Generic
+|]
 
 migration :: WalletId -> SqlPersistT IO ()
 migration wid = do
