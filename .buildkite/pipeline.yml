@@ -45,7 +45,7 @@ steps:
     env:
       TMPDIR: "/cache"
 
-  - label: 'Build bemchmarks (linux)'
+  - label: 'Build benchmarks (linux)'
     depends_on: linux-nix
     command: 'nix build .#ci.benchmarks.all'
     agents:
@@ -144,7 +144,7 @@ steps:
       - './nix/regenerate.sh'
     agents:
       system: ${macos}
-    if: 0 == 1 # Disabled for now until a macos mini is available
+    # if: 0 == 1 # Disabled for now until a macos mini is available
 
   - label: 'Run unit tests (macOS)'
     depends_on: macos-nix
@@ -152,7 +152,7 @@ steps:
     command: 'GC_DONT_GC=1 nix build --max-silent-time 0 --max-jobs 1 -L .#ci.${macos}.tests.run.unit'
     agents:
       system: ${macos}
-    if: 0 == 1 # Disabled for now until a macos mini is available
+    # if: 0 == 1 # Disabled for now until a macos mini is available
 
   - label: 'Build package (macOS)'
     depends_on: macos-nix
@@ -161,7 +161,7 @@ steps:
     artifact_paths: [ "./result/macos-intel/**" ]
     agents:
       system: ${macos}
-    if: 0 == 1 # Disabled for now until a macos mini is available
+    # if: 0 == 1 # Disabled for now until a macos mini is available
 
   - block: "Build package and docker image (linux)"
     depends_on: linux-nix
