@@ -104,6 +104,7 @@ import Cardano.Wallet.Address.Discovery
     , dropLowerPendingIxs
     , emptyPendingIxs
     , nextChangeIndex
+    , pendingIxsFromList
     , pendingIxsToList
     )
 import Cardano.Wallet.Primitive.NetworkId
@@ -507,8 +508,14 @@ instance
 
     genChange mkAddress st = (addr, st{pendingChangeIxs=pending'})
       where
+        ixMin = minBound @(Index 'Soft 'CredFromKeyK)
+        updatePending pendingIxs =
+            pendingIxsFromList $ L.nub $ (pendingIxsToList pendingIxs) <> [ixMin]
         (ix, pending') =
-            nextChangeIndex (getPool $ internalPool st) (pendingChangeIxs st)
+            if (oneChangeAddressMode st) then
+                ( ixMin, updatePending (pendingChangeIxs st) )
+            else
+                nextChangeIndex (getPool $ internalPool st) (pendingChangeIxs st)
         addressXPub = deriveAddressPublicKey (accountXPub st) UtxoInternal ix
         addr = mkAddress addressXPub (rewardAccountKey st)
 
