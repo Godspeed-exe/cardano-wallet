@@ -425,6 +425,7 @@ instance
             policyXPub
             rewardXPub
             prefix
+            False
 
     loadDiscoveries wid sl =
         SeqDiscoveries

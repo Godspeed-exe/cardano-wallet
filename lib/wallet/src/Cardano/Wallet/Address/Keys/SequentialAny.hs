@@ -54,7 +54,7 @@ mkSeqAnyState
     -> SeqAnyState n k p
 mkSeqAnyState kF credentials purpose poolGap =
     SeqAnyState
-        {innerState = mkSeqStateFromRootXPrv kF credentials purpose poolGap}
+        {innerState = mkSeqStateFromRootXPrv kF credentials purpose poolGap False}
 
 -- | Construct a Sequential state for a wallet
 -- from root private key and password.
@@ -67,6 +67,7 @@ mkSeqStateFromRootXPrv
     -> ClearCredentials k
     -> Index 'Hardened 'PurposeK
     -> AddressPoolGap
+    -> Bool
     -> SeqState n k
 mkSeqStateFromRootXPrv kF (RootCredentials rootXPrv pwd) =
     mkSeqStateFromAccountXPub

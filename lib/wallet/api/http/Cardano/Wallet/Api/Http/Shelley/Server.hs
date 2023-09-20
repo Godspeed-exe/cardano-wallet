@@ -892,7 +892,8 @@ postShelleyWallet
     -> Handler ApiWallet
 postShelleyWallet ctx generateKey body = do
     let state = mkSeqStateFromRootXPrv
-            (keyFlavorFromState @s) (RootCredentials rootXPrv pwdP) purposeCIP1852 g
+            (keyFlavorFromState @s) (RootCredentials rootXPrv pwdP)
+            purposeCIP1852 g oneAddrMode
     void $ liftHandler $ createWalletWorker @_ @s ctx wid
         (\dbf -> W.createWallet @_ @s genesisParams dbf wid wName state)
         (\workerCtx _ -> W.manageRewardBalance
@@ -913,6 +914,7 @@ postShelleyWallet ctx generateKey body = do
     wid = WalletId $ digest ShelleyKeyS $ publicKey ShelleyKeyS rootXPrv
     wName = getApiT (body ^. #name)
     genesisParams = ctx ^. #netParams
+    oneAddrMode = fromMaybe False (body ^. #oneChangeAddress)
 
 postAccountWallet
     :: forall ctx s k n w.
@@ -934,7 +936,7 @@ postAccountWallet
     -> Handler w
 postAccountWallet ctx mkWallet liftKey coworker body = do
     let state = mkSeqStateFromAccountXPub
-            (liftKey accXPub) Nothing purposeCIP1852 g
+            (liftKey accXPub) Nothing purposeCIP1852 g False
     void $ liftHandler $ createWalletWorker @_ @s ctx wid
         (\dbf -> W.createWallet @_ @s genesisParams dbf wid wName state)
         coworker
