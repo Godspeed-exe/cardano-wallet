@@ -397,6 +397,7 @@ instance
             , seqStatePolicyXPub = serializeXPub <$> Seq.policyXPub st
             , seqStateRewardXPub = serializeXPub $ Seq.rewardAccountKey st
             , seqStateDerivationPrefix = Seq.derivationPrefix st
+            , seqStateOneChangeAddrMode = Seq.oneChangeAddressMode st
             }
         deleteWhere [SeqStatePendingWalletId ==. wid]
         dbChunked
@@ -409,7 +410,7 @@ instance
 
     loadPrologue wid = runMaybeT $ do
         st <- MaybeT $ selectFirst [SeqStateWalletId ==. wid] []
-        let SeqState _ eGap iGap accountBytes policyBytes rewardBytes prefix =
+        let SeqState _ eGap iGap accountBytes policyBytes rewardBytes prefix changeAddrMode =
                 entityVal st
         let accountXPub = unsafeDeserializeXPub accountBytes
         let rewardXPub = unsafeDeserializeXPub rewardBytes
@@ -425,7 +426,7 @@ instance
             policyXPub
             rewardXPub
             prefix
-            False
+            changeAddrMode
 
     loadDiscoveries wid sl =
         SeqDiscoveries
