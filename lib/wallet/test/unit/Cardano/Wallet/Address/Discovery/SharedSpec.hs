@@ -129,6 +129,7 @@ mkSharedStateFromAccountXPub'
     :: HasSNetworkId n
     => SharedKey 'AccountK XPub
     -> Index 'Hardened 'AccountK
+    -> Bool
     -> AddressPoolGap
     -> ScriptTemplate
     -> Maybe ScriptTemplate
@@ -145,7 +146,7 @@ prop_addressWithScriptFromOurVerKeyIxIn (CatalystSharedState accXPub' accIx' pTe
     keyIx' === keyIx
   where
     addr = constructAddressFromIx @n UtxoExternal pTemplate' dTemplate' keyIx
-    sharedState = mkSharedStateFromAccountXPub' @n accXPub' accIx' g pTemplate' dTemplate'
+    sharedState = mkSharedStateFromAccountXPub' @n accXPub' accIx' False g pTemplate' dTemplate'
     (Just (keyIx', _), _) = isShared @n addr sharedState
 
 prop_addressWithScriptFromOurVerKeyIxBeyond
@@ -159,7 +160,7 @@ prop_addressWithScriptFromOurVerKeyIxBeyond (CatalystSharedState accXPub' accIx'
     snd (isShared @n addr sharedState) === sharedState
   where
     addr = constructAddressFromIx @n UtxoExternal pTemplate' dTemplate' keyIx
-    sharedState = mkSharedStateFromAccountXPub' @n accXPub' accIx' g pTemplate' dTemplate'
+    sharedState = mkSharedStateFromAccountXPub' @n accXPub' accIx' False g pTemplate' dTemplate'
 
 getAddrPool
     :: SharedState n k
@@ -178,7 +179,7 @@ prop_addressDiscoveryMakesAddressUsed (CatalystSharedState accXPub' accIx' pTemp
     (snd <$> Map.lookup addr ourAddrs) === Just Used .&&.
     fromIntegral (Map.size ourAddrs) === (fromIntegral (fromEnum ix + 1) + getAddressPoolGap g)
   where
-    sharedState = mkSharedStateFromAccountXPub' @n accXPub' accIx' g pTemplate' dTemplate'
+    sharedState = mkSharedStateFromAccountXPub' @n accXPub' accIx' False g pTemplate' dTemplate'
     addr = AddressPool.addressFromIx (getAddrPool sharedState) keyIx
     (Just (ix, _), sharedState') = isShared @n (liftPaymentAddress @n addr) sharedState
     ourAddrs = AddressPool.addresses (getAddrPool sharedState')
@@ -194,7 +195,7 @@ prop_addressDoubleDiscovery (CatalystSharedState accXPub' accIx' pTemplate' dTem
     snd sharedState' === snd sharedState''
   where
     addr = constructAddressFromIx @n UtxoExternal pTemplate' dTemplate' keyIx
-    sharedState = mkSharedStateFromAccountXPub' @n accXPub' accIx' g pTemplate' dTemplate'
+    sharedState = mkSharedStateFromAccountXPub' @n accXPub' accIx' False g pTemplate' dTemplate'
     sharedState' = isShared @n addr sharedState
     sharedState'' = isShared @n addr (snd sharedState')
 
@@ -213,7 +214,7 @@ prop_addressDiscoveryImpossibleFromOtherAccXPub (CatalystSharedState _ accIx' pT
     (ScriptTemplate _ script') = pTemplate'
     pTemplate'' = ScriptTemplate
         (Map.fromList [(Cosigner 0, getRawKey SharedKeyS accXPub')]) script'
-    sharedState = mkSharedStateFromAccountXPub' @n accXPub' accIx' g pTemplate'' dTemplate'
+    sharedState = mkSharedStateFromAccountXPub' @n accXPub' accIx' False g pTemplate'' dTemplate'
 
 prop_addressDiscoveryImpossibleFromOtherAccountOfTheSameRootXPrv
     :: forall n. HasSNetworkId n
@@ -235,7 +236,7 @@ prop_addressDiscoveryImpossibleFromOtherAccountOfTheSameRootXPrv (CatalystShared
         (Map.fromList [(Cosigner 0, getRawKey SharedKeyS accXPub')]) script'
     pTemplate''' = ScriptTemplate
         (Map.fromList [(Cosigner 0, getRawKey SharedKeyS accXPub'')]) script'
-    sharedState = mkSharedStateFromAccountXPub' @n accXPub'' accIx'' g pTemplate'' dTemplate'
+    sharedState = mkSharedStateFromAccountXPub' @n accXPub'' accIx'' False g pTemplate'' dTemplate'
     addr = constructAddressFromIx @n UtxoExternal pTemplate''' dTemplate' keyIx
 
 prop_addressDiscoveryImpossibleWithinAccountButDifferentScript
@@ -251,7 +252,7 @@ prop_addressDiscoveryImpossibleWithinAccountButDifferentScript (CatalystSharedSt
   where
     (ScriptTemplate cosignerXpubs _) = pTemplate'
     pTemplate'' = ScriptTemplate cosignerXpubs script'
-    sharedState = mkSharedStateFromAccountXPub' @n accXPub' accIx' g pTemplate' dTemplate'
+    sharedState = mkSharedStateFromAccountXPub' @n accXPub' accIx' False g pTemplate' dTemplate'
     addr = constructAddressFromIx @n UtxoExternal pTemplate'' dTemplate' keyIx
 
 prop_addressDiscoveryDoesNotChangeGapInvariance
@@ -263,7 +264,7 @@ prop_addressDiscoveryDoesNotChangeGapInvariance (CatalystSharedState accXPub' ac
     preconditions keyIx g dTemplate' ==>
     fromIntegral (L.length mapOfConsecutiveUnused) === getAddressPoolGap g
   where
-    sharedState = mkSharedStateFromAccountXPub' @n accXPub' accIx' g pTemplate' dTemplate'
+    sharedState = mkSharedStateFromAccountXPub' @n accXPub' accIx' False g pTemplate' dTemplate'
     addr = AddressPool.addressFromIx (getAddrPool sharedState) keyIx
     (_, sharedState') = isShared @n (liftPaymentAddress @n addr) sharedState
     mapOfConsecutiveUnused
@@ -395,5 +396,5 @@ instance Arbitrary (SharedState 'Mainnet SharedKey) where
         accIx' <- arbitrary
         scriptTemplate <- genScriptTemplate
         pure $ mkSharedStateFromRootXPrv SharedKeyS
-            (RootCredentials rootXPrv pwd) accIx'
+            (RootCredentials rootXPrv pwd) accIx' False
             defaultAddressPoolGap scriptTemplate Nothing

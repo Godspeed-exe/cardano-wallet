@@ -1082,7 +1082,8 @@ postSharedWalletFromRootXPrv ctx generateKey body = do
     ix' <- liftHandler $ withExceptT ErrConstructSharedWalletInvalidIndex $
         W.guardHardIndex ix
     let state = mkSharedStateFromRootXPrv kF
-            (RootCredentials rootXPrv pwdP) ix' g pTemplate dTemplateM
+            (RootCredentials rootXPrv pwdP) ix' oneAddrMode
+            g pTemplate dTemplateM
     let stateReadiness = state ^. #ready
     if stateReadiness == Shared.Pending
     then void $ liftHandler $ createNonRestoringWalletWorker @_ @s ctx wid
@@ -1121,6 +1122,7 @@ postSharedWalletFromRootXPrv ctx generateKey body = do
     scriptValidation =
         maybe RecommendedValidation getApiT (body ^. #scriptValidation)
     genesisParams = ctx ^. #netParams
+    oneAddrMode = fromMaybe False (body ^. #oneChangeAddressMode)
 
 postSharedWalletFromAccountXPub
     :: forall ctx s k n.
@@ -1152,7 +1154,7 @@ postSharedWalletFromAccountXPub ctx liftKey body = do
     acctIx <- liftHandler $ withExceptT ErrConstructSharedWalletInvalidIndex $
         W.guardHardIndex ix
     let state = mkSharedStateFromAccountXPub kF
-            (liftKey accXPub) acctIx g pTemplate dTemplateM
+            (liftKey accXPub) acctIx False g pTemplate dTemplateM
     let stateReadiness = state ^. #ready
     if stateReadiness == Shared.Pending
     then void $ liftHandler $ createNonRestoringWalletWorker @_ @s ctx wid

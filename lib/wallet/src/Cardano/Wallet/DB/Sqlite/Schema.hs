@@ -434,6 +434,7 @@ SharedState
     sharedStateDelegationScript         (Script Cosigner) Maybe   sql=delegation_script
     sharedStateRewardAccount            W.RewardAccount Maybe     sql=reward_account
     sharedStateDerivationPrefix         W.DerivationPrefix        sql=derivation_prefix
+    sharedStateOneChangeAddrMode        Bool                      sql=one_change_addr_mode
 
     Primary sharedStateWalletId
     Foreign Wallet OnDeleteCascade shared_state sharedStateWalletId
