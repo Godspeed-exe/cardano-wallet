@@ -1650,7 +1650,9 @@ listWallets ctx mkApiWallet = do
 
 putWallet
     :: forall ctx s apiWallet
-     . ctx ~ ApiLayer s
+     . ( WalletFlavor s
+       , ctx ~ ApiLayer s
+       )
     => ctx
     -> MkApiWallet ctx s apiWallet
     -> ApiT WalletId
@@ -1662,6 +1664,15 @@ putWallet ctx mkApiWallet (ApiT wid) body = do
             return ()
         Just (ApiT wName) -> withWorkerCtx ctx wid liftE liftE $ \wrk -> do
             handler $ W.updateWallet wrk (modify wName)
+    case walletFlavor @s of
+        ShelleyWallet ->
+            case body ^. #oneChangeAddressMode of
+                Just modeOnOff -> withWorkerCtx ctx wid liftE liftE $ \wrk -> do
+                    handler $ W.setOneChangeAddressMode wrk modeOnOff
+                _ ->
+                    return ()
+        _ ->
+            return ()
     fst <$> getWallet ctx mkApiWallet (ApiT wid)
   where
     modify :: W.WalletName -> WalletMetadata -> WalletMetadata
