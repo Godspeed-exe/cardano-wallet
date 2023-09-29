@@ -34,13 +34,16 @@ import Cardano.Wallet.Api.Types
     ( ApiAccountKeyShared (..)
     , ApiActiveSharedWallet
     , ApiAddressWithPath
+    , ApiConstructTransaction
     , ApiCosignerIndex (..)
     , ApiCredentialType (..)
     , ApiFee (..)
     , ApiScriptTemplate (..)
+    , ApiSerialisedTransaction (..)
     , ApiSharedWallet (..)
     , ApiT (..)
     , ApiTransaction
+    , ApiTxId (..)
     , ApiUtxoStatistics
     , ApiWallet
     , ApiWalletUtxoSnapshot
@@ -59,6 +62,8 @@ import Cardano.Wallet.Primitive.SyncProgress
     ( SyncProgress (..) )
 import Cardano.Wallet.Primitive.Types.Address
     ( AddressState (..) )
+import Cardano.Wallet.Primitive.Types.Tx.TxMeta
+    ( TxStatus (..) )
 import Control.Monad
     ( forM, forM_ )
 import Control.Monad.IO.Class
@@ -123,6 +128,8 @@ import Test.Integration.Framework.DSL
     , postSharedWallet
     , request
     , sharedAccPubKeyFromMnemonics
+    , signSharedTx
+    , submitSharedTxWithWid
     , unsafeRequest
     , verify
     , walletId
@@ -249,7 +256,7 @@ spec = describe "SHARED_WALLETS" $ do
             [ expectResponseCode HTTP.status201
             ]
 
-        let wal = getFromResponse id rPost
+        let wal = getFromResponse Prelude.id rPost
 
         let payloadKey = Json [json|{
                 "passphrase": #{fixturePassphrase},
@@ -263,7 +270,7 @@ spec = describe "SHARED_WALLETS" $ do
             [ expectResponseCode HTTP.status202
             , expectField #format (`shouldBe` Extended)
             ]
-        let ApiAccountKeyShared bytes _ _ = getFromResponse id rKey
+        let ApiAccountKeyShared bytes _ _ = getFromResponse Prelude.id rKey
         bech32Text acctHrp bytes `shouldBe` accXPubDerived
 
         aKey <- getAccountKeyShared ctx wal (Just Extended)
@@ -272,7 +279,7 @@ spec = describe "SHARED_WALLETS" $ do
             [ expectResponseCode HTTP.status200
             , expectField #format (`shouldBe` Extended)
             ]
-        let ApiAccountKeyShared bytes' _ _ = getFromResponse id aKey
+        let ApiAccountKeyShared bytes' _ _ = getFromResponse Prelude.id aKey
         bech32Text acctHrp bytes' `shouldBe` accXPubDerived
 
         let (ApiSharedWallet (Right walActive)) = wal
@@ -300,7 +307,7 @@ spec = describe "SHARED_WALLETS" $ do
         rPostAcctOther <- postSharedWallet ctx Default payloadAcctOther
         verify (fmap (view #wallet) <$> rPostAcctOther)
             [ expectResponseCode HTTP.status201 ]
-        let walAcctOther = getFromResponse id rPostAcctOther
+        let walAcctOther = getFromResponse Prelude.id rPostAcctOther
         let (ApiSharedWallet (Right walAcctOtherActive)) = walAcctOther
 
         (walAcctOtherActive ^. #id)  `shouldNotBe` (walActive ^. #id)
@@ -323,7 +330,7 @@ spec = describe "SHARED_WALLETS" $ do
         rPostAcctSame <- postSharedWallet ctx Default payloadAcctSame
         verify (fmap (view #wallet) <$> rPostAcctSame)
             [ expectResponseCode HTTP.status201 ]
-        let walAcctSame = getFromResponse id rPostAcctSame
+        let walAcctSame = getFromResponse Prelude.id rPostAcctSame
         let (ApiSharedWallet (Right walAcctSameActive)) = walAcctSame
 
         (walAcctSameActive ^. #id)  `shouldBe` (walActive ^. #id)
@@ -347,7 +354,7 @@ spec = describe "SHARED_WALLETS" $ do
             postSharedWallet ctx Default payloadAcctSameOtherScript
         verify (fmap (view #wallet) <$> rPostAcctSameOtherScript)
             [ expectResponseCode HTTP.status201 ]
-        let walAcctSameOtherScript = getFromResponse id rPostAcctSameOtherScript
+        let walAcctSameOtherScript = getFromResponse Prelude.id rPostAcctSameOtherScript
         let (ApiSharedWallet (Right walAcctSameOtherScriptActive)) =
                 walAcctSameOtherScript
 
@@ -386,7 +393,7 @@ spec = describe "SHARED_WALLETS" $ do
             [ expectResponseCode HTTP.status201
             ]
 
-        let wal = getFromResponse id rPost
+        let wal = getFromResponse Prelude.id rPost
         let (ApiSharedWallet (Right walActive)) = wal
 
         toText (getApiT $ walActive ^. #id)  `shouldBe`
@@ -441,7 +448,7 @@ spec = describe "SHARED_WALLETS" $ do
                 (`shouldBe` DerivationIndex 2_147_483_678)
             ]
 
-        let wal = getFromResponse id rPost
+        let wal = getFromResponse Prelude.id rPost
 
         let payloadKey = Json [json|{
                 "passphrase": #{fixturePassphrase},
@@ -455,7 +462,7 @@ spec = describe "SHARED_WALLETS" $ do
             [ expectResponseCode HTTP.status202
             , expectField #format (`shouldBe` Extended)
             ]
-        let ApiAccountKeyShared bytes _ _ = getFromResponse id rKey
+        let ApiAccountKeyShared bytes _ _ = getFromResponse Prelude.id rKey
         bech32Text acctHrp bytes `shouldBe` accXPubDerived
 
     it "SHARED_WALLETS_CREATE_03 - \
@@ -508,14 +515,14 @@ spec = describe "SHARED_WALLETS" $ do
                 (`shouldBe` DerivationIndex 2_147_483_658)
             ]
 
-        let wal = getFromResponse id rPost
+        let wal = getFromResponse Prelude.id rPost
         aKey <- getAccountKeyShared ctx wal (Just Extended)
 
         verify aKey
             [ expectResponseCode HTTP.status200
             , expectField #format (`shouldBe` Extended)
             ]
-        let ApiAccountKeyShared bytes' _ _ = getFromResponse id aKey
+        let ApiAccountKeyShared bytes' _ _ = getFromResponse Prelude.id aKey
         bech32Text acctHrp bytes' `shouldBe` accXPubTxt
 
     it "SHARED_WALLETS_CREATE_04 - \
@@ -591,7 +598,7 @@ spec = describe "SHARED_WALLETS" $ do
             [ expectResponseCode HTTP.status201
             ]
 
-        let wal = getFromResponse id rPost
+        let wal = getFromResponse Prelude.id rPost
 
         rDel <- deleteSharedWallet ctx wal
         expectResponseCode HTTP.status204 rDel
@@ -619,7 +626,7 @@ spec = describe "SHARED_WALLETS" $ do
             ]
 
         let walWithSelf@(ApiSharedWallet (Right activeWal)) =
-                getFromResponse id rPostWithSelf
+                getFromResponse Prelude.id rPostWithSelf
 
         getWalletIdFromSharedWallet walWithSelf
             `shouldBe`
@@ -659,7 +666,7 @@ spec = describe "SHARED_WALLETS" $ do
             [ expectResponseCode HTTP.status201
             ]
 
-        let wal = getFromResponse id rPost
+        let wal = getFromResponse Prelude.id rPost
 
         rDel <- deleteSharedWallet ctx wal
         expectResponseCode HTTP.status204 rDel
@@ -685,7 +692,7 @@ spec = describe "SHARED_WALLETS" $ do
             ]
 
         let walWithSelf@(ApiSharedWallet (Right activeWal)) =
-                getFromResponse id rPostWithSelf
+                getFromResponse Prelude.id rPostWithSelf
 
         getWalletIdFromSharedWallet walWithSelf
             `shouldBe` getWalletIdFromSharedWallet wal
@@ -922,7 +929,7 @@ spec = describe "SHARED_WALLETS" $ do
             [ expectResponseCode HTTP.status201
             ]
         let walOneAddr@(ApiSharedWallet (Right walOneAddr')) =
-                getFromResponse id rPost
+                getFromResponse Prelude.id rPost
 
         -- new empty wallet has 20 unused external addresses and 0 used change addresses
         let initialTotal1 = 20
@@ -938,6 +945,57 @@ spec = describe "SHARED_WALLETS" $ do
         listAddresses wFixture
             >>= verifyAddrs initialTotal2 initialUsed2
 
+        --send funds to one change address wallet
+        let minUTxOValue' = minUTxOValue (_mainEra ctx)
+        addrs1 <- listAddresses walOneAddr'
+        let destOneChange = (head addrs1) ^. #id
+        let payloadTx amt destination = Json [json|{
+                "payments": [{
+                    "address": #{destination},
+                    "amount": {
+                        "quantity": #{amt},
+                        "unit": "lovelace"
+                    }
+                }]
+            }|]
+        let realizeTx wSrc wDest amt dest = do
+                rTx <- request @(ApiConstructTransaction n) ctx
+                    (Link.createUnsignedTransaction @'Shared wSrc) Default
+                    (payloadTx amt dest)
+                verify rTx
+                    [ expectResponseCode HTTP.status202
+                    ]
+                let (ApiSerialisedTransaction apiTx _) =
+                        getFromResponse #transaction rTx
+                signedTx <-
+                    signSharedTx ctx wSrc apiTx
+                        [ expectResponseCode HTTP.status202 ]
+                submittedTx <- submitSharedTxWithWid ctx wSrc signedTx
+                verify submittedTx
+                    [ expectResponseCode HTTP.status202
+                    ]
+                let txid = getFromResponse #id submittedTx
+
+                eventually "Transaction is discovered" $ do
+                    request @(ApiTransaction n) ctx
+                        (Link.getTransaction @'Shared wDest (ApiTxId txid)) Default Empty
+                        >>= expectField #status (`shouldBe` ApiT InLedger)
+                    request @(ApiTransaction n) ctx
+                        (Link.getTransaction @'Shared wSrc (ApiTxId txid)) Default Empty
+                        >>= expectField #status (`shouldBe` ApiT InLedger)
+        forM_ [10, 10, 10] $ \num -> realizeTx wFixture walOneAddr' (num * minUTxOValue') destOneChange
+
+        -- new fixture wallet has 21 unused external addresses, 1 used external addresses
+        -- (second one was used), and 3 used change addresses as there were three txs sent and each tx used new change
+        -- address
+        listAddresses wFixture
+            >>= verifyAddrs (initialTotal2+3) (initialUsed2+3)
+        -- the previously empty wallet has 20 unused external addresses and 0 used change addresses
+        -- and 1 used external address as three txs choose the same address as destination address
+        listAddresses walOneAddr'
+            >>= verifyAddrs (initialTotal1+1) (initialUsed1+1)
+
+
     it "SHARED_WALLETS_DELETE_01 - \
         \Delete of a shared wallet" $
         \ctx -> runResourceT $ do
@@ -947,7 +1005,7 @@ spec = describe "SHARED_WALLETS" $ do
         rInit <- postSharedWallet ctx Default payload
         verify rInit
             [ expectResponseCode HTTP.status201 ]
-        let wal = getFromResponse id rInit
+        let wal = getFromResponse Prelude.id rInit
 
         eventually "Wallet state = Ready" $ do
             r <- getSharedWallet ctx wal
@@ -985,7 +1043,7 @@ spec = describe "SHARED_WALLETS" $ do
                 } |]
         rPost <- postSharedWallet ctx Default payloadCreate
         expectResponseCode HTTP.status201 rPost
-        let wal@(ApiSharedWallet (Left pendingWal)) = getFromResponse id rPost
+        let wal@(ApiSharedWallet (Left pendingWal)) = getFromResponse Prelude.id rPost
         let (ApiScriptTemplate cosignerKeysPost) =
                 pendingWal ^. #paymentScriptTemplate
         liftIO $ cosigners cosignerKeysPost
@@ -1002,7 +1060,7 @@ spec = describe "SHARED_WALLETS" $ do
 
         rPatch <- patchSharedWallet ctx wal Payment payloadPatch
         expectResponseCode HTTP.status200 rPatch
-        let (ApiSharedWallet (Right activeWal)) = getFromResponse id rPatch
+        let (ApiSharedWallet (Right activeWal)) = getFromResponse Prelude.id rPatch
         let (ApiScriptTemplate cosignerKeysPatch) =
                 activeWal ^. #paymentScriptTemplate
         liftIO $ cosigners cosignerKeysPatch
@@ -1056,7 +1114,7 @@ spec = describe "SHARED_WALLETS" $ do
                 } |]
         rPost <- postSharedWallet ctx Default payloadCreate
         expectResponseCode HTTP.status201 rPost
-        let wal@(ApiSharedWallet (Left pendingWal)) = getFromResponse id rPost
+        let wal@(ApiSharedWallet (Left pendingWal)) = getFromResponse Prelude.id rPost
         let (ApiScriptTemplate cosignerKeysPostInPayment) =
                 pendingWal ^. #paymentScriptTemplate
         liftIO $ cosigners cosignerKeysPostInPayment
@@ -1072,7 +1130,7 @@ spec = describe "SHARED_WALLETS" $ do
 
         rPatch <- patchSharedWallet ctx wal Delegation payloadPatch
         expectResponseCode HTTP.status200 rPatch
-        let (ApiSharedWallet (Right activeWal)) = getFromResponse id rPatch
+        let (ApiSharedWallet (Right activeWal)) = getFromResponse Prelude.id rPatch
         let (Just (ApiScriptTemplate cosignerKeysPatch)) =
                 activeWal ^. #delegationScriptTemplate
         liftIO $ cosigners cosignerKeysPatch
@@ -1104,7 +1162,7 @@ spec = describe "SHARED_WALLETS" $ do
                 } |]
         rPost <- postSharedWallet ctx Default payloadCreate
         expectResponseCode HTTP.status201 rPost
-        let wal@(ApiSharedWallet (Right _activeWal)) = getFromResponse id rPost
+        let wal@(ApiSharedWallet (Right _activeWal)) = getFromResponse Prelude.id rPost
 
         let payloadPatch = Json [json| {
                 "cosigner#1": #{accXPubTxt1}
@@ -1138,7 +1196,7 @@ spec = describe "SHARED_WALLETS" $ do
                 } |]
         rPost <- postSharedWallet ctx Default payloadCreate
         expectResponseCode HTTP.status201 rPost
-        let wal@(ApiSharedWallet (Left _pendingWal)) = getFromResponse id rPost
+        let wal@(ApiSharedWallet (Left _pendingWal)) = getFromResponse Prelude.id rPost
 
         let payloadPatch = Json [json| {
                 "cosigner#1": #{accXPubTxt1}
@@ -1210,7 +1268,7 @@ spec = describe "SHARED_WALLETS" $ do
                 } |]
         rPost <- postSharedWallet ctx Default payloadCreate
         expectResponseCode HTTP.status201 rPost
-        let wal@(ApiSharedWallet (Left _pendingWal)) = getFromResponse id rPost
+        let wal@(ApiSharedWallet (Left _pendingWal)) = getFromResponse Prelude.id rPost
 
         let payloadPatch1 = Json [json| {
                 "cosigner#1": #{accXPubTxt1}
@@ -1275,7 +1333,7 @@ spec = describe "SHARED_WALLETS" $ do
                 } |]
         rPost <- postSharedWallet ctx Default payloadCreate
         expectResponseCode HTTP.status201 rPost
-        let wal@(ApiSharedWallet (Left _pendingWal)) = getFromResponse id rPost
+        let wal@(ApiSharedWallet (Left _pendingWal)) = getFromResponse Prelude.id rPost
 
         let payloadPatch = Json [json| {
                 "cosigner#0": #{accXPubTxt1}
@@ -1294,7 +1352,7 @@ spec = describe "SHARED_WALLETS" $ do
         verify rPost
             [ expectResponseCode HTTP.status201
             ]
-        let wal@(ApiSharedWallet (Right _activeWal)) = getFromResponse id rPost
+        let wal@(ApiSharedWallet (Right _activeWal)) = getFromResponse Prelude.id rPost
 
         (_, Right paymentKey) <-
             getSharedWalletKey ctx wal
@@ -1334,7 +1392,7 @@ spec = describe "SHARED_WALLETS" $ do
         verify rPost
             [ expectResponseCode HTTP.status201
             ]
-        let wal@(ApiSharedWallet (Left _pendingWal)) = getFromResponse id rPost
+        let wal@(ApiSharedWallet (Left _pendingWal)) = getFromResponse Prelude.id rPost
 
         (_, Right paymentKey) <-
             getSharedWalletKey ctx wal
@@ -1382,7 +1440,7 @@ spec = describe "SHARED_WALLETS" $ do
         verify rPost
             [ expectResponseCode HTTP.status201
             ]
-        let wal = getFromResponse id rPost
+        let wal = getFromResponse Prelude.id rPost
 
         rl <- listFilteredSharedWallets
             (Set.singleton (getWalletIdFromSharedWallet wal ^. walletId) ) ctx
@@ -1424,7 +1482,7 @@ spec = describe "SHARED_WALLETS" $ do
             verify rPost
                 [ expectResponseCode HTTP.status201
                 ]
-            let wal = getFromResponse id rPost
+            let wal = getFromResponse Prelude.id rPost
             pure (getWalletIdFromSharedWallet wal ^. walletId)
         let name = (^? (#wallet . traverse . #name . #getApiT . #getWalletName))
         rl <- listFilteredSharedWallets (Set.fromList wids) ctx
@@ -1446,7 +1504,7 @@ spec = describe "SHARED_WALLETS" $ do
         verify rPost
             [ expectResponseCode HTTP.status201
             ]
-        let wal = getFromResponse id rPost
+        let wal = getFromResponse Prelude.id rPost
 
         rDel <- deleteSharedWallet ctx wal
         expectResponseCode HTTP.status204 rDel
@@ -1481,12 +1539,12 @@ spec = describe "SHARED_WALLETS" $ do
             , expectField (traverse . #balance . #available)
                 (`shouldBe` Quantity 0)
             ]
-        let walShared@(ApiSharedWallet (Right wal)) = getFromResponse id rPost
+        let walShared@(ApiSharedWallet (Right wal)) = getFromResponse Prelude.id rPost
 
         rAddr <- request @[ApiAddressWithPath n] ctx
             (Link.listAddresses @'Shared wal) Default Empty
         expectResponseCode HTTP.status200 rAddr
-        let sharedAddrs = getFromResponse id rAddr
+        let sharedAddrs = getFromResponse Prelude.id rAddr
         let destination = (sharedAddrs !! 1) ^. #id
 
         wShelley <- fixtureWallet ctx
