@@ -3178,17 +3178,11 @@ setOneChangeAddressMode
     => WalletLayer IO s
     -> Bool
     -> IO ()
-setOneChangeAddressMode ctx modeOnOff = db & \DBLayer{..} -> do
-    cp <- atomically readCheckpoint
-
-    let (SeqPrologue seqState) = getPrologue $ getState cp
-    let seqState' = seqState & #oneChangeAddressMode .~ modeOnOff
-    atomically $ Delta.onDBVar walletState $ Delta.update
-        $ \_ -> [ReplacePrologue $ SeqPrologue seqState']
-
-    pure ()
-  where
-    db = ctx ^. dbLayer
+setOneChangeAddressMode ctx modeOnOff =
+    onWalletState ctx $ update $ \s ->
+        let (SeqPrologue seqState) = WS.prologue s
+            seqState' = seqState & #oneChangeAddressMode .~ modeOnOff
+        in  [ReplacePrologue $ SeqPrologue seqState']
 
 setOneChangeAddressModeShared
     :: forall s n
@@ -3196,17 +3190,11 @@ setOneChangeAddressModeShared
     => WalletLayer IO s
     -> Bool
     -> IO ()
-setOneChangeAddressModeShared ctx modeOnOff = db & \DBLayer{..} -> do
-    cp <- atomically readCheckpoint
-
-    let (SharedPrologue sharedState) = getPrologue $ getState cp
-    let sharedState' = sharedState & #oneChangeAddressMode .~ modeOnOff
-    atomically $ Delta.onDBVar walletState $ Delta.update
-        $ \_ -> [ReplacePrologue $ SharedPrologue sharedState']
-
-    pure ()
-  where
-    db = ctx ^. dbLayer
+setOneChangeAddressModeShared ctx modeOnOff =
+    onWalletState ctx $ update $ \s ->
+        let (SharedPrologue sharedState) = WS.prologue s
+            sharedState' = sharedState & #oneChangeAddressMode .~ modeOnOff
+        in  [ReplacePrologue $ SharedPrologue sharedState']
 
 -- | Retrieve any public account key of a wallet.
 getAccountPublicKeyAtIndex
