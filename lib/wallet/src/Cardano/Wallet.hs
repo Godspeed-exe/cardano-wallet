@@ -292,7 +292,8 @@ import Cardano.Wallet.Address.Derivation.SharedKey
 import Cardano.Wallet.Address.Derivation.Shelley
     ( ShelleyKey (..), deriveAccountPrivateKeyShelley )
 import Cardano.Wallet.Address.Discovery
-    ( CompareDiscovery (..)
+    ( ChangeAddressMode (..)
+    , CompareDiscovery (..)
     , GenChange (..)
     , GetAccount (..)
     , GetPurpose (..)
@@ -853,7 +854,8 @@ createIcarusWallet
     wname
     credentials = do
         let g = defaultAddressPoolGap
-            s = mkSeqStateFromRootXPrv @n IcarusKeyS credentials purposeBIP44 g False
+            s = mkSeqStateFromRootXPrv @n IcarusKeyS credentials purposeBIP44 g
+                IncreasingChangeAddresses
             (hist, cp) = initWallet block0 s
         now <- lift getCurrentTime
         let meta =
@@ -3176,7 +3178,7 @@ setOneChangeAddressMode
     :: forall s n
      . s ~ SeqState n ShelleyKey
     => WalletLayer IO s
-    -> Bool
+    -> ChangeAddressMode
     -> IO ()
 setOneChangeAddressMode ctx modeOnOff =
     onWalletState ctx $ update $ \s ->
@@ -3188,7 +3190,7 @@ setOneChangeAddressModeShared
     :: forall s n
      . s ~ SharedState n SharedKey
     => WalletLayer IO s
-    -> Bool
+    -> ChangeAddressMode
     -> IO ()
 setOneChangeAddressModeShared ctx modeOnOff =
     onWalletState ctx $ update $ \s ->

@@ -97,6 +97,8 @@ import Cardano.Wallet.Address.Derivation
     )
 import Cardano.Wallet.Address.Derivation.Shelley
     ( ShelleyKey )
+import Cardano.Wallet.Address.Discovery
+    ( ChangeAddressMode (..) )
 import Cardano.Wallet.Address.Discovery.Random
     ( RndState, mkRndState )
 import Cardano.Wallet.Address.Discovery.Sequential
@@ -2285,7 +2287,7 @@ dummyShelleyChangeAddressGen = AnyChangeAddressGenWithState
     (mkSeqStateFromRootXPrv ShelleyKeyS
         (RootCredentials rootK pwd)
         purposeCIP1852
-        defaultAddressPoolGap False)
+        defaultAddressPoolGap IncreasingChangeAddresses)
   where
     pwd = Passphrase ""
     rootK = Shelley.unsafeGenerateKeyFromSeed (dummyMnemonic, Nothing) mempty

@@ -51,7 +51,7 @@ import Cardano.Wallet.Address.Derivation
 import Cardano.Wallet.Address.Derivation.SharedKey
     ( SharedKey (..), purposeCIP1854, replaceCosignersWithVerKeys )
 import Cardano.Wallet.Address.Discovery
-    ( coinTypeAda, emptyPendingIxs )
+    ( ChangeAddressMode, coinTypeAda, emptyPendingIxs )
 import Cardano.Wallet.Address.Discovery.Sequential
     ( AddressPoolGap (..) )
 import Cardano.Wallet.Address.Discovery.Shared
@@ -95,7 +95,7 @@ mkSharedStateFromAccountXPub
     => KeyFlavorS k
     -> k 'AccountK XPub
     -> Index 'Hardened 'AccountK
-    -> Bool
+    -> ChangeAddressMode
     -> AddressPoolGap
     -> ScriptTemplate
     -> Maybe ScriptTemplate
@@ -118,7 +118,7 @@ mkSharedStateFromRootXPrv
     => KeyFlavorS k
     -> ClearCredentials k
     -> Index 'Hardened 'AccountK
-    -> Bool
+    -> ChangeAddressMode
     -> AddressPoolGap
     -> ScriptTemplate
     -> Maybe ScriptTemplate

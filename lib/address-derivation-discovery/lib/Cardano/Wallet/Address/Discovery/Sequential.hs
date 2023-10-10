@@ -94,7 +94,8 @@ import Cardano.Wallet.Address.Derivation
     , unsafePaymentKeyFingerprint
     )
 import Cardano.Wallet.Address.Discovery
-    ( CompareDiscovery (..)
+    ( ChangeAddressMode (..)
+    , CompareDiscovery (..)
     , GenChange (..)
     , GetAccount (..)
     , IsOurs (..)
@@ -335,7 +336,7 @@ data SeqState (n :: NetworkDiscriminant) k = SeqState
         -- ^ Reward account public key associated with this wallet
     , derivationPrefix :: DerivationPrefix
         -- ^ Derivation path prefix from a root key up to the internal account
-    , oneChangeAddressMode :: Bool
+    , oneChangeAddressMode :: ChangeAddressMode
         -- ^ One change address mode. If switched on then next transactions will
         -- use the same change address. If no then next change index for
         -- each next transaction is used
@@ -418,7 +419,7 @@ mkSeqStateFromAccountXPub
     -> Maybe (k 'PolicyK XPub)
     -> Index 'Hardened 'PurposeK
     -> AddressPoolGap
-    -> Bool
+    -> ChangeAddressMode
     -> SeqState n k
 mkSeqStateFromAccountXPub accXPub policyXPubM purpose g change = SeqState
     { internalPool = newSeqAddressPool @n accXPub g
@@ -512,7 +513,7 @@ instance
         updatePending pendingIxs =
             pendingIxsFromList $ L.nub $ (pendingIxsToList pendingIxs) <> [ixMin]
         (ix, pending') =
-            if (oneChangeAddressMode st) then
+            if oneChangeAddressMode st == SingleChangeAddress  then
                 ( ixMin, updatePending (pendingChangeIxs st) )
             else
                 nextChangeIndex (getPool $ internalPool st) (pendingChangeIxs st)

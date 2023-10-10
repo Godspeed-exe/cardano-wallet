@@ -38,6 +38,8 @@ import Cardano.Slotting.Slot
     ( SlotNo (..) )
 import Cardano.Wallet.Address.Derivation
     ( Role (..) )
+import Cardano.Wallet.Address.Discovery
+    ( ChangeAddressMode (..) )
 import Cardano.Wallet.Address.Discovery.Sequential
     ( AddressPoolGap (..)
     , DerivationPrefix
@@ -800,3 +802,23 @@ instance PersistField Spent where
 
 instance PersistFieldSql Spent where
     sqlType _ = sqlType (Proxy @(Maybe Word64))
+
+----------------------------------------------------------------------------
+-- ChangeAddressMode
+
+instance PersistField ChangeAddressMode where
+    toPersistValue = toPersistValue . changeAddressModeToBool
+    fromPersistValue pv = do
+        let err = "not a valid value: " <> T.pack (show pv)
+        bimap (const err) changeAddressModeFromBool (fromPersistValue pv)
+
+instance PersistFieldSql ChangeAddressMode where
+    sqlType _ = sqlType (Proxy @Bool)
+
+changeAddressModeToBool :: ChangeAddressMode -> Bool
+changeAddressModeToBool SingleChangeAddress = True
+changeAddressModeToBool IncreasingChangeAddresses = False
+
+changeAddressModeFromBool :: Bool -> ChangeAddressMode
+changeAddressModeFromBool True = SingleChangeAddress
+changeAddressModeFromBool False = IncreasingChangeAddresses

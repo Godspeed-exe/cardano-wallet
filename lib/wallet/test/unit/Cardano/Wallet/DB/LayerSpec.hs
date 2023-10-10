@@ -67,7 +67,7 @@ import Cardano.Wallet.Address.Derivation.SharedKey
 import Cardano.Wallet.Address.Derivation.Shelley
     ( ShelleyKey (..), generateKeyFromSeed )
 import Cardano.Wallet.Address.Discovery
-    ( KnownAddresses (..) )
+    ( ChangeAddressMode (..), KnownAddresses (..) )
 import Cardano.Wallet.Address.Discovery.Random
     ( RndState (..) )
 import Cardano.Wallet.Address.Discovery.Sequential
@@ -1450,7 +1450,7 @@ testCp = snd $ initWallet block0 initDummyState
     initDummyState :: TestState
     initDummyState = mkSeqStateFromRootXPrv
         ShelleyKeyS (RootCredentials xprv mempty)
-        purposeCIP1852 defaultAddressPoolGap False
+        purposeCIP1852 defaultAddressPoolGap IncreasingChangeAddresses
       where
         mw = SomeMnemonic . unsafePerformIO . generate $ genMnemonic @15
         xprv = generateKeyFromSeed (mw, Nothing) mempty
@@ -1556,7 +1556,7 @@ testCpSeq = snd $ initWallet block0 initDummyStateSeq
 initDummyStateSeq :: TestState
 initDummyStateSeq = mkSeqStateFromRootXPrv
     ShelleyKeyS (RootCredentials xprv mempty) purposeCIP1852
-    defaultAddressPoolGap False
+    defaultAddressPoolGap IncreasingChangeAddresses
   where
       mw = SomeMnemonic $ unsafePerformIO (generate $ genMnemonic @15)
       xprv = Seq.generateKeyFromSeed (mw, Nothing) mempty

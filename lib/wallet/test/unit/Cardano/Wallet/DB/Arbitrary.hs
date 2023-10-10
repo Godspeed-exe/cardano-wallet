@@ -54,7 +54,7 @@ import Cardano.Wallet.Address.Derivation.SharedKey
 import Cardano.Wallet.Address.Derivation.Shelley
     ( ShelleyKey (..) )
 import Cardano.Wallet.Address.Discovery
-    ( IsOurs, PendingIxs, emptyPendingIxs )
+    ( ChangeAddressMode (..), IsOurs, PendingIxs, emptyPendingIxs )
 import Cardano.Wallet.Address.Discovery.Random
     ( RndState (..) )
 import Cardano.Wallet.Address.Discovery.Sequential
@@ -663,7 +663,7 @@ instance Arbitrary (SharedState 'Mainnet SharedKey) where
             Nothing
             Nothing
             defaultAddressPoolGap
-            False
+            IncreasingChangeAddresses
             (Shared.Active $ SharedAddressPools
                 (Shared.newSharedAddressPool @'Mainnet defaultAddressPoolGap pt Nothing)
                 (Shared.newSharedAddressPool @'Mainnet defaultAddressPoolGap pt Nothing)
@@ -824,6 +824,10 @@ instance Arbitrary SomeMnemonic where
 instance Arbitrary TxScriptValidity where
     arbitrary = genTxScriptValidity
     shrink = shrinkTxScriptValidity
+
+instance Arbitrary ChangeAddressMode where
+    arbitrary = genericArbitrary
+    shrink = genericShrink
 
 {-------------------------------------------------------------------------------
                                    Buildable

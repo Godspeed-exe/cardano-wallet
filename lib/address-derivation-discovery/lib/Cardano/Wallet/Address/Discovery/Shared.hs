@@ -88,7 +88,8 @@ import Cardano.Wallet.Address.Derivation.Shared
 import Cardano.Wallet.Address.Derivation.SharedKey
     ( constructAddressFromIx, replaceCosignersWithVerKeys, toNetworkTag )
 import Cardano.Wallet.Address.Discovery
-    ( CompareDiscovery (..)
+    ( ChangeAddressMode (..)
+    , CompareDiscovery (..)
     , GenChange (..)
     , GetAccount (..)
     , IsOurs (..)
@@ -276,7 +277,7 @@ data SharedState (n :: NetworkDiscriminant) k = SharedState
         -- ^ Reward account script hash associated with this wallet
     , poolGap :: !AddressPoolGap
         -- ^ Address pool gap to be used in the address pool of shared state
-    , oneChangeAddressMode :: Bool
+    , oneChangeAddressMode :: ChangeAddressMode
         -- ^ One change address mode. If switched on then next transactions will
         -- use the same change address. If no then next change index for
         -- each next transaction is used
@@ -523,7 +524,7 @@ instance GenChange (SharedState n k) where
                 updatePending pendingIxs =
                     pendingIxsFromList $ L.nub $ (pendingIxsToList pendingIxs) <> [ixMin]
                 (ix, pending') =
-                    if (oneChangeAddressMode st) then
+                    if oneChangeAddressMode st == SingleChangeAddress then
                         ( ixMin, updatePending (pendingChangeIxs pools) )
                     else
                         nextChangeIndex (getPool intPool) pending

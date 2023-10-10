@@ -18,6 +18,8 @@ import Cardano.Wallet.Address.Derivation.MintBurn
     ( derivePolicyPrivateKey )
 import Cardano.Wallet.Address.Derivation.SharedKey
     ( SharedKey (..) )
+import Cardano.Wallet.Address.Discovery
+    ( ChangeAddressMode (..) )
 import Cardano.Wallet.Address.Discovery.Sequential
     ( AddressPoolGap, SeqState, SupportsDiscovery, mkSeqStateFromAccountXPub )
 import Cardano.Wallet.Flavor
@@ -54,7 +56,8 @@ mkSeqAnyState
     -> SeqAnyState n k p
 mkSeqAnyState kF credentials purpose poolGap =
     SeqAnyState
-        {innerState = mkSeqStateFromRootXPrv kF credentials purpose poolGap False}
+        {innerState =
+         mkSeqStateFromRootXPrv kF credentials purpose poolGap IncreasingChangeAddresses}
 
 -- | Construct a Sequential state for a wallet
 -- from root private key and password.
@@ -67,7 +70,7 @@ mkSeqStateFromRootXPrv
     -> ClearCredentials k
     -> Index 'Hardened 'PurposeK
     -> AddressPoolGap
-    -> Bool
+    -> ChangeAddressMode
     -> SeqState n k
 mkSeqStateFromRootXPrv kF (RootCredentials rootXPrv pwd) =
     mkSeqStateFromAccountXPub
