@@ -277,8 +277,7 @@ listWallets = discriminate @style
 
 putWallet
     :: forall (style :: WalletStyle) w.
-        ( HasCallStack
-        , Discriminate style
+        ( Discriminate style
         , HasType (ApiT WalletId) w
         )
     => w
@@ -286,7 +285,7 @@ putWallet
 putWallet w = discriminate @style
     (endpoint @Api.PutWallet (wid &))
     (endpoint @Api.PutByronWallet (wid &))
-    (notSupported "Shared")
+    (endpoint @Api.PutSharedWallet (wid &))
   where
     wid = w ^. typed @(ApiT WalletId)
 

@@ -86,13 +86,14 @@ import Cardano.Wallet.Api.Types
     , ApiUtxoStatistics
     , ApiWallet (..)
     , ApiWalletPassphrase
+    , ApiWalletPutData (..)
+    , ApiWalletPutDataExtended (..)
     , ApiWalletUtxoSnapshot (..)
     , Base (Base64)
     , ByronWalletPutPassphraseData (..)
     , Iso8601Time (..)
     , PostTransactionFeeOldDataT
     , PostTransactionOldDataT
-    , WalletPutData (..)
     , WalletPutPassphraseData (..)
     )
 import Cardano.Wallet.Api.Types.SchemaMetadata
@@ -157,7 +158,11 @@ data WalletClient wallet = WalletClient
         -> ClientM wallet
     , putWallet
         :: ApiT WalletId
-        -> WalletPutData
+        -> ApiWalletPutDataExtended
+        -> ClientM wallet
+    , putWalletByron
+        :: ApiT WalletId
+        -> ApiWalletPutData
         -> ClientM wallet
     , putWalletPassphrase
         :: ApiT WalletId
@@ -284,6 +289,7 @@ walletClient =
             , listWallets = _listWallets
             , postWallet = _postWallet
             , putWallet = _putWallet
+            , putWalletByron = error "putWalletByron not available for shelley"
             , putWalletPassphrase = _putWalletPassphrase
             , getWalletUtxoSnapshot = _getWalletUtxoSnapshot
             , getWalletUtxoStatistics = _getWalletUtxoStatistics
@@ -297,7 +303,7 @@ byronWalletClient =
             :<|> _deleteWallet
             :<|> _getWallet
             :<|> _listWallets
-            :<|> _putWallet
+            :<|> _putWalletByron
             :<|> _getWalletUtxoSnapshot
             :<|> _getWalletUtxoStatistics
             :<|> _putWalletPassphrase
@@ -308,7 +314,8 @@ byronWalletClient =
             , getWallet = _getWallet
             , listWallets = _listWallets
             , postWallet = _postWallet
-            , putWallet = _putWallet
+            , putWallet = error "putWallet not available for byron"
+            , putWalletByron = _putWalletByron
             , putWalletPassphrase = _putWalletPassphrase
             , getWalletUtxoSnapshot = _getWalletUtxoSnapshot
             , getWalletUtxoStatistics = _getWalletUtxoStatistics

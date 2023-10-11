@@ -183,7 +183,8 @@ module Cardano.Wallet.Api.Types
     , toApiUtxoStatistics
     , VerificationKeyHashing (..)
     , WalletPostData (..)
-    , WalletPutData (..)
+    , ApiWalletPutData (..)
+    , ApiWalletPutDataExtended (..)
     , WalletPutPassphraseData (..)
     , WalletPutPassphraseMnemonicData (..)
     , WalletPutPassphraseOldPassphraseData (..)
@@ -982,13 +983,20 @@ data AccountPostData = AccountPostData
     deriving (FromJSON, ToJSON) via DefaultRecord AccountPostData
     deriving (Eq, Generic, Show)
 
-data WalletPutData = WalletPutData
+newtype ApiWalletPutData = ApiWalletPutData
+    { name :: (Maybe (ApiT WalletName))
+    }
+    deriving (Eq, Generic)
+    deriving (FromJSON, ToJSON) via DefaultRecord ApiWalletPutData
+    deriving Show via (Quiet ApiWalletPutData)
+
+data ApiWalletPutDataExtended = ApiWalletPutDataExtended
     { name :: (Maybe (ApiT WalletName))
     , oneChangeAddressMode :: (Maybe Bool)
     }
     deriving (Eq, Generic)
-    deriving (FromJSON, ToJSON) via DefaultRecord WalletPutData
-    deriving Show via (Quiet WalletPutData)
+    deriving (FromJSON, ToJSON) via DefaultRecord ApiWalletPutDataExtended
+    deriving Show via (Quiet ApiWalletPutDataExtended)
 
 newtype SettingsPutData = SettingsPutData
     { settings :: (ApiT W.Settings)

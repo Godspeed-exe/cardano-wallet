@@ -90,6 +90,7 @@ module Cardano.Wallet.Api.Http.Shelley.Server
     , putRandomAddress
     , putRandomAddresses
     , putWallet
+    , putWalletByron
     , putWalletPassphrase
     , quitStakePool
     , selectCoins
@@ -377,6 +378,8 @@ import Cardano.Wallet.Api.Types
     , ApiWalletOutput (..)
     , ApiWalletPassphrase (..)
     , ApiWalletPassphraseInfo (..)
+    , ApiWalletPutData (..)
+    , ApiWalletPutDataExtended (..)
     , ApiWalletSignData (..)
     , ApiWalletUtxoSnapshot (..)
     , ApiWalletUtxoSnapshotEntry (..)
@@ -396,7 +399,6 @@ import Cardano.Wallet.Api.Types
     , VerificationKeyHashing (..)
     , WalletOrAccountPostData (..)
     , WalletPostData (..)
-    , WalletPutData (..)
     , WalletPutPassphraseData (..)
     , XPubOrSelf (..)
     , getApiMnemonicT
@@ -1655,6 +1657,24 @@ listWallets ctx mkApiWallet = do
         . runHandler
         . getWallet ctx mkApiWallet
 
+putWalletByron
+    :: forall ctx s apiWallet . ctx ~ ApiLayer s
+    => ctx
+    -> MkApiWallet ctx s apiWallet
+    -> ApiT WalletId
+    -> ApiWalletPutData
+    -> Handler apiWallet
+putWalletByron ctx mkApiWallet (ApiT wid) body = do
+    case body ^. #name of
+        Nothing ->
+            return ()
+        Just (ApiT wName) -> withWorkerCtx ctx wid liftE liftE $ \wrk -> do
+            handler $ W.updateWallet wrk (modify wName)
+    fst <$> getWallet ctx mkApiWallet (ApiT wid)
+
+modify :: W.WalletName -> WalletMetadata -> WalletMetadata
+modify wName meta = meta { name = wName }
+
 putWallet
     :: forall ctx s apiWallet
      . ( WalletFlavor s
@@ -1663,7 +1683,7 @@ putWallet
     => ctx
     -> MkApiWallet ctx s apiWallet
     -> ApiT WalletId
-    -> WalletPutData
+    -> ApiWalletPutDataExtended
     -> Handler apiWallet
 putWallet ctx mkApiWallet (ApiT wid) body = do
     case body ^. #name of
@@ -1688,8 +1708,6 @@ putWallet ctx mkApiWallet (ApiT wid) body = do
             return ()
     fst <$> getWallet ctx mkApiWallet (ApiT wid)
   where
-    modify :: W.WalletName -> WalletMetadata -> WalletMetadata
-    modify wName meta = meta { name = wName }
     toOneAddrMode = \case
         True  -> SingleChangeAddress
         False -> IncreasingChangeAddresses
