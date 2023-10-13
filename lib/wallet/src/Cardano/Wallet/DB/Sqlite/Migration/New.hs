@@ -20,6 +20,8 @@ import Cardano.Wallet.DB.Sqlite.Migration.Old
     ( getSchemaVersion, putSchemaVersion )
 import Cardano.Wallet.DB.Store.Delegations.Migration
     ( migrateDelegations )
+import Cardano.Wallet.DB.Store.WalletState.Migration
+    ( migratePrologue )
 import Control.Category
     ( Category (id), (.) )
 import Control.Monad.Reader
@@ -69,6 +71,8 @@ _useSqlBackend
 _useSqlBackend = hoistMigration $ withReaderT dbBackend
 
 runNewStyleMigrations :: Tracer IO DBLog -> FilePath -> IO ()
-runNewStyleMigrations tr fp =
+runNewStyleMigrations tr fp = do
     runMigrations (newMigrationInterface tr) fp
         $ migrateDelegations . noMigrations
+    runMigrations (newMigrationInterface tr) fp
+        $ migratePrologue . noMigrations
