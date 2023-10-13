@@ -62,8 +62,11 @@ getVersionNew = fmap oldToNewSchemaVersion . getSchemaVersion
 setVersionNew :: Connection -> Version -> IO ()
 setVersionNew conn = putSchemaVersion conn . newToOldSchemaVersion
 
-noMigrations :: Migration m 2 2
-noMigrations = id
+noMigrations2 :: Migration m 2 2
+noMigrations2 = id
+
+noMigrations3 :: Migration m 3 3
+noMigrations3 = id
 
 _useSqlBackend
     :: Migration (SqlPersistT m) from to
@@ -73,6 +76,6 @@ _useSqlBackend = hoistMigration $ withReaderT dbBackend
 runNewStyleMigrations :: Tracer IO DBLog -> FilePath -> IO ()
 runNewStyleMigrations tr fp = do
     runMigrations (newMigrationInterface tr) fp
-        $ migrateDelegations . noMigrations
+        $ migrateDelegations . noMigrations2
     runMigrations (newMigrationInterface tr) fp
-        $ migratePrologue . noMigrations
+        $ migratePrologue . noMigrations3
