@@ -28,7 +28,6 @@ module Cardano.Wallet.DB.Sqlite.Migration.Old
     , onFieldPresent
     , SqlColumnStatus (..)
     , isTablePresentByName
-    , runSql
     )
     where
 
