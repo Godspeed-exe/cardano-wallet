@@ -397,7 +397,7 @@ instance
             , seqStatePolicyXPub = serializeXPub <$> Seq.policyXPub st
             , seqStateRewardXPub = serializeXPub $ Seq.rewardAccountKey st
             , seqStateDerivationPrefix = Seq.derivationPrefix st
-            , seqStateOneChangeAddrMode = Seq.oneChangeAddressMode st
+            , seqStateChangeAddrMode = Seq.changeAddressMode st
             }
         deleteWhere [SeqStatePendingWalletId ==. wid]
         dbChunked
@@ -510,7 +510,7 @@ instance
                 deleteWhere [SharedStatePendingWalletId ==. wid]
                 dbChunked insertMany_ (mkSharedStatePendingIxs pendingIxs)
       where
-        insertSharedState prefix accXPub gap pTemplate dTemplateM rewardAcctM modeOnOff =
+        insertSharedState prefix accXPub gap pTemplate dTemplateM rewardAcctM mode =
             do
                 deleteWhere [SharedStateWalletId ==. wid]
                 insert_ $ SharedState
@@ -521,7 +521,7 @@ instance
                     , sharedStateDelegationScript = template <$> dTemplateM
                     , sharedStateRewardAccount = rewardAcctM
                     , sharedStateDerivationPrefix = prefix
-                    , sharedStateOneChangeAddrMode = modeOnOff
+                    , sharedStateChangeAddrMode = mode
                     }
 
         insertCosigner cs cred = do

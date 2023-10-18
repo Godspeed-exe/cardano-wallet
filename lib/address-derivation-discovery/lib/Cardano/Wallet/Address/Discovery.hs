@@ -161,9 +161,13 @@ class GetPurpose (key :: Depth -> Type -> Type)  where
 class GetAccount s (key :: Depth -> Type -> Type) | s -> key  where
     getAccount :: s -> key 'AccountK XPub
 
+
+-- | How to generate change addresses.
 data ChangeAddressMode
     = SingleChangeAddress
+        -- ^ Use a single address for all change outputs.
     | IncreasingChangeAddresses
+        -- ^ For every change output, increase a counter and derive an address from that.
     deriving stock (Generic, Show, Eq)
 
 instance NFData ChangeAddressMode

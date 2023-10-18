@@ -18,10 +18,10 @@ import Cardano.Wallet.DB.Migration
     )
 import Cardano.Wallet.DB.Sqlite.Migration.Old
     ( getSchemaVersion, putSchemaVersion )
+import Cardano.Wallet.DB.Store.Checkpoints.Migration
+    ( migratePrologue )
 import Cardano.Wallet.DB.Store.Delegations.Migration
     ( migrateDelegations )
-import Cardano.Wallet.DB.Store.WalletState.Migration
-    ( migratePrologue )
 import Control.Category
     ( Category (id), (.) )
 import Control.Monad.Reader
@@ -62,11 +62,8 @@ getVersionNew = fmap oldToNewSchemaVersion . getSchemaVersion
 setVersionNew :: Connection -> Version -> IO ()
 setVersionNew conn = putSchemaVersion conn . newToOldSchemaVersion
 
-noMigrations2 :: Migration m 2 2
-noMigrations2 = id
-
-noMigrations3 :: Migration m 3 3
-noMigrations3 = id
+noMigrations :: Migration m 2 2
+noMigrations = id
 
 _useSqlBackend
     :: Migration (SqlPersistT m) from to
@@ -76,6 +73,4 @@ _useSqlBackend = hoistMigration $ withReaderT dbBackend
 runNewStyleMigrations :: Tracer IO DBLog -> FilePath -> IO ()
 runNewStyleMigrations tr fp = do
     runMigrations (newMigrationInterface tr) fp
-        $ migrateDelegations . noMigrations2
-    runMigrations (newMigrationInterface tr) fp
-        $ migratePrologue . noMigrations3
+        $ migratePrologue . migrateDelegations . noMigrations

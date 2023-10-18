@@ -3,7 +3,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications #-}
 
-module Cardano.Wallet.DB.Store.WalletState.Migration
+module Cardano.Wallet.DB.Store.Checkpoints.Migration
     ( migratePrologue
     ) where
 
@@ -36,9 +36,9 @@ import qualified Database.Sqlite as Sqlite
 
 migratePrologue
     :: Migration (ReadDBHandle IO) 3 4
-migratePrologue = mkMigration oneChangeAddrMigration
+migratePrologue = mkMigration changeAddrMigration
   where
-    oneChangeAddrMigration = do
+    changeAddrMigration = do
         let sharedWid = DBField SharedStateWalletId
             seqWid= DBField SeqStateWalletId
             defaultValue = "FALSE"
@@ -47,9 +47,9 @@ migratePrologue = mkMigration oneChangeAddrMigration
         r2 <- liftIO $ isFieldPresent conn sharedWid
         case (r1, r2) of
             (ColumnPresent, ColumnMissing) -> withReaderT dbBackend $ do
-                liftIO $ addColumn_ conn True (DBField SeqStateOneChangeAddrMode) defaultValue
+                liftIO $ addColumn_ conn True (DBField SeqStateChangeAddrMode) defaultValue
             (ColumnMissing, ColumnPresent) -> withReaderT dbBackend $ do
-                liftIO $ addColumn_ conn True (DBField SharedStateOneChangeAddrMode) defaultValue
+                liftIO $ addColumn_ conn True (DBField SharedStateChangeAddrMode) defaultValue
             _ ->
                 return ()
 

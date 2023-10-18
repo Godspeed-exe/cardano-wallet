@@ -170,7 +170,6 @@ migrateManually tr key defaultFieldValues =
     , moveRndUnusedAddresses
     , cleanupSeqStateTable
     , addPolicyXPubIfMissing
-    , addOneChangeAddrModeIfMissing
     , removeOldSubmissions
     , removeMetasOfSubmissions
     , createAndPopulateSubmissionsSlotTable
@@ -779,15 +778,6 @@ migrateManually tr key defaultFieldValues =
         addColumn_ conn False (DBField SeqStatePolicyXPub) value
       where
         value = "NULL"
-
-    -- | Adds an 'one_change_addr_mode' column to the 'seq_state'
-    -- table if it is missing.
-    --
-    addOneChangeAddrModeIfMissing :: Sqlite.Connection -> IO ()
-    addOneChangeAddrModeIfMissing conn = do
-        addColumn_ conn True (DBField SeqStateOneChangeAddrMode) value
-      where
-        value = "FALSE"
 
     addColumn_
         :: Sqlite.Connection

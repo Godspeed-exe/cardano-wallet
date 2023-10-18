@@ -896,7 +896,7 @@ postShelleyWallet
 postShelleyWallet ctx generateKey body = do
     let state = mkSeqStateFromRootXPrv
             (keyFlavorFromState @s) (RootCredentials rootXPrv pwdP)
-            purposeCIP1852 g oneAddrMode
+            purposeCIP1852 g changeAddrMode
     void $ liftHandler $ createWalletWorker @_ @s ctx wid
         (\dbf -> W.createWallet @_ @s genesisParams dbf wid wName state)
         (\workerCtx _ -> W.manageRewardBalance
@@ -917,7 +917,7 @@ postShelleyWallet ctx generateKey body = do
     wid = WalletId $ digest ShelleyKeyS $ publicKey ShelleyKeyS rootXPrv
     wName = getApiT (body ^. #name)
     genesisParams = ctx ^. #netParams
-    oneAddrMode = case body ^. #oneChangeAddressMode of
+    changeAddrMode = case body ^. #oneChangeAddressMode of
         Just True -> SingleChangeAddress
         _         -> IncreasingChangeAddresses
 
@@ -1087,7 +1087,7 @@ postSharedWalletFromRootXPrv ctx generateKey body = do
     ix' <- liftHandler $ withExceptT ErrConstructSharedWalletInvalidIndex $
         W.guardHardIndex ix
     let state = mkSharedStateFromRootXPrv kF
-            (RootCredentials rootXPrv pwdP) ix' oneAddrMode
+            (RootCredentials rootXPrv pwdP) ix' changeAddrMode
             g pTemplate dTemplateM
     let stateReadiness = state ^. #ready
     if stateReadiness == Shared.Pending
@@ -1127,7 +1127,7 @@ postSharedWalletFromRootXPrv ctx generateKey body = do
     scriptValidation =
         maybe RecommendedValidation getApiT (body ^. #scriptValidation)
     genesisParams = ctx ^. #netParams
-    oneAddrMode = case body ^. #oneChangeAddressMode of
+    changeAddrMode = case body ^. #oneChangeAddressMode of
         Just True -> SingleChangeAddress
         _         -> IncreasingChangeAddresses
 
@@ -1695,13 +1695,13 @@ putWallet ctx mkApiWallet (ApiT wid) body = do
         ShelleyWallet ->
             case body ^. #oneChangeAddressMode of
                 Just modeOnOff -> withWorkerCtx ctx wid liftE liftE $ \wrk -> do
-                    handler $ W.setOneChangeAddressMode wrk (toOneAddrMode modeOnOff)
+                    handler $ W.setChangeAddressMode wrk (toOneAddrMode modeOnOff)
                 _ ->
                     return ()
         SharedWallet ->
             case body ^. #oneChangeAddressMode of
                 Just modeOnOff -> withWorkerCtx ctx wid liftE liftE $ \wrk -> do
-                    handler $ W.setOneChangeAddressModeShared wrk (toOneAddrMode modeOnOff)
+                    handler $ W.setChangeAddressModeShared wrk (toOneAddrMode modeOnOff)
                 _ ->
                     return ()
         _ ->
