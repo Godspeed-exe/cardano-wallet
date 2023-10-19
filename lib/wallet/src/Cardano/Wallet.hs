@@ -559,9 +559,9 @@ import Cardano.Wallet.Shelley.Compatibility.Ledger
     , toWalletCoin
     )
 import Cardano.Wallet.Shelley.Transaction
-    ( txConstraints
+    ( _txRewardWithdrawalCost
+    , txConstraints
     , txWitnessTagForKey
-    , _txRewardWithdrawalCost
     )
 import Cardano.Wallet.Transaction
     ( DelegationAction (..)

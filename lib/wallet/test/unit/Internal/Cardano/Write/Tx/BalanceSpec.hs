@@ -169,9 +169,9 @@ import Cardano.Wallet.Primitive.Types.Tx.Constraints
     ( TxSize (..)
     )
 import Cardano.Wallet.Shelley.Transaction
-    ( mkByronWitness
+    ( _decodeSealedTx
+    , mkByronWitness
     , mkDelegationCertificates
-    , _decodeSealedTx
     )
 import Cardano.Wallet.Transaction
     ( DelegationAction (..)
@@ -287,7 +287,6 @@ import Internal.Cardano.Write.Tx
     , Tx
     , TxIn
     , TxOut
-    , TxOutInRecentEra (..)
     , TxOutInRecentEra (..)
     , UTxO
     , fromCardanoTx
@@ -455,26 +454,26 @@ import qualified Cardano.Wallet.Primitive.Types as W.Block
 import qualified Cardano.Wallet.Primitive.Types.Address as W
     ( Address (..)
     )
-import qualified Cardano.Wallet.Primitive.Types.Coin as W.Coin
 import qualified Cardano.Wallet.Primitive.Types.Coin as W
     ( Coin (..)
     )
+import qualified Cardano.Wallet.Primitive.Types.Coin as W.Coin
 import qualified Cardano.Wallet.Primitive.Types.Coin.Gen as W
 import qualified Cardano.Wallet.Primitive.Types.Hash as W
     ( Hash (..)
     , mockHash
     )
-import qualified Cardano.Wallet.Primitive.Types.TokenBundle as W.TokenBundle
 import qualified Cardano.Wallet.Primitive.Types.TokenBundle as W
     ( TokenBundle
     )
+import qualified Cardano.Wallet.Primitive.Types.TokenBundle as W.TokenBundle
 import qualified Cardano.Wallet.Primitive.Types.TokenBundle.Gen as W
 import qualified Cardano.Wallet.Primitive.Types.Tx.TxIn as W
 import qualified Cardano.Wallet.Primitive.Types.Tx.TxIn.Gen as W
-import qualified Cardano.Wallet.Primitive.Types.Tx.TxOut as W.TxOut
 import qualified Cardano.Wallet.Primitive.Types.Tx.TxOut as W
     ( TxOut (..)
     )
+import qualified Cardano.Wallet.Primitive.Types.Tx.TxOut as W.TxOut
 import qualified Cardano.Wallet.Primitive.Types.Tx.TxOut.Gen as TxOutGen
 import qualified Cardano.Wallet.Primitive.Types.UTxO as W
 import qualified Cardano.Wallet.Shelley.Compatibility.Ledger as Convert

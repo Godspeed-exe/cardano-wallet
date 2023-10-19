@@ -63,8 +63,7 @@ import Control.Category
     ( Category (..)
     )
 import Generics.SOP
-    ( (:.:) (..)
-    , I (..)
+    ( I (..)
     , K (..)
     , NP
     , Proxy (Proxy)
@@ -72,6 +71,7 @@ import Generics.SOP
     , productTypeTo
     , unComp
     , unK
+    , (:.:) (..)
     )
 import Generics.SOP.Classes
 import Generics.SOP.NP

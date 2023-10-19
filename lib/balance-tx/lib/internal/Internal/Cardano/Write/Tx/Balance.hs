@@ -176,8 +176,8 @@ import Data.Semigroup.Cancellative
     ( Reductive ((</>))
     )
 import Data.Type.Equality
-    ( (:~:) (..)
-    , testEquality
+    ( testEquality
+    , (:~:) (..)
     )
 import Fmt
     ( Buildable
@@ -281,8 +281,8 @@ import Text.Pretty.Simple
 
 import qualified Cardano.Address.Script as CA
 import qualified Cardano.Api as Cardano
-import qualified Cardano.Api.Byron as Cardano
 import qualified Cardano.Api.Byron as Byron
+import qualified Cardano.Api.Byron as Cardano
 import qualified Cardano.Api.Shelley as Cardano
 import qualified Cardano.CoinSelection.UTxOIndex as UTxOIndex
 import qualified Cardano.CoinSelection.UTxOSelection as UTxOSelection
@@ -290,32 +290,32 @@ import qualified Cardano.Ledger.Core as Core
 import qualified Cardano.Wallet.Primitive.Types.Address as W
     ( Address
     )
-import qualified Cardano.Wallet.Primitive.Types.Coin as W.Coin
 import qualified Cardano.Wallet.Primitive.Types.Coin as W
     ( Coin (..)
     )
-import qualified Cardano.Wallet.Primitive.Types.TokenBundle as W.TokenBundle
+import qualified Cardano.Wallet.Primitive.Types.Coin as W.Coin
 import qualified Cardano.Wallet.Primitive.Types.TokenBundle as W
     ( TokenBundle (..)
     )
-import qualified Cardano.Wallet.Primitive.Types.TokenMap as W.TokenMap
+import qualified Cardano.Wallet.Primitive.Types.TokenBundle as W.TokenBundle
 import qualified Cardano.Wallet.Primitive.Types.TokenMap as W
     ( AssetId
     )
+import qualified Cardano.Wallet.Primitive.Types.TokenMap as W.TokenMap
 import qualified Cardano.Wallet.Primitive.Types.TokenQuantity as W
     ( TokenQuantity
     )
 import qualified Cardano.Wallet.Primitive.Types.Tx.TxIn as W
     ( TxIn
     )
-import qualified Cardano.Wallet.Primitive.Types.Tx.TxOut as W.TxOut
 import qualified Cardano.Wallet.Primitive.Types.Tx.TxOut as W
     ( TxOut (..)
     )
-import qualified Cardano.Wallet.Primitive.Types.UTxO as W.UTxO
+import qualified Cardano.Wallet.Primitive.Types.Tx.TxOut as W.TxOut
 import qualified Cardano.Wallet.Primitive.Types.UTxO as W
     ( UTxO (..)
     )
+import qualified Cardano.Wallet.Primitive.Types.UTxO as W.UTxO
 import qualified Cardano.Wallet.Shelley.Compatibility.Ledger as Convert
 import qualified Data.Foldable as F
 import qualified Data.List as L

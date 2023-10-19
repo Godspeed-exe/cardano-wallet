@@ -327,14 +327,14 @@ import GHC.Generics
     ( Generic
     )
 import Servant.API
-    ( (:<|>)
-    , (:>)
-    , Capture
+    ( Capture
     , JSON
     , OctetStream
     , QueryFlag
     , QueryParam
     , ReqBody
+    , (:<|>)
+    , (:>)
     )
 import Servant.API.Verbs
     ( DeleteAccepted

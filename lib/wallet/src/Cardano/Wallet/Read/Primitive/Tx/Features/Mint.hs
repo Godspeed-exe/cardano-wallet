@@ -53,9 +53,9 @@ import Cardano.Wallet.Primitive.Types.TokenPolicy
     ( TokenPolicyId (..)
     )
 import Cardano.Wallet.Read.Eras
-    ( (:*:) (..)
-    , EraFun (..)
+    ( EraFun (..)
     , K (..)
+    , (:*:) (..)
     )
 import Cardano.Wallet.Read.Primitive.Tx.Features.Inputs
     ( fromShelleyTxIn

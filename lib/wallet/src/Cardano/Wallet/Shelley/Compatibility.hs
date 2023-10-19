@@ -346,8 +346,8 @@ import Data.Quantity
     , mkPercentage
     )
 import Data.Type.Equality
-    ( (:~:) (..)
-    , testEquality
+    ( testEquality
+    , (:~:) (..)
     )
 import Data.Word
     ( Word16

@@ -75,9 +75,9 @@ import Cardano.Wallet.Read.Eras.KnownEras
     , knownEraIndices
     )
 import Generics.SOP
-    ( (:.:) (..)
-    , K (..)
+    ( K (..)
     , unK
+    , (:.:) (..)
     )
 import GHC.Generics
     ( (:*:) (..)
