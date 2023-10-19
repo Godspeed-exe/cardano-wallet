@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
@@ -17,6 +18,8 @@ import Control.Tracer
     ( nullTracer )
 import Data.String.Interpolate
     ( i )
+import Data.Text
+    ( Text )
 import Database.Persist.Sql
     ( Single (Single) )
 import Test.Hspec
@@ -28,13 +31,18 @@ import qualified Database.Persist.Sqlite as Sqlite
 
 spec :: Spec
 spec =
-    describe "Checkpoints migration"
-        $ it "'migrate' db sequential table"
-        $ testMigrationStateTable
+    describe "Checkpoints migration" $ do
+        it "'migrate' db shared table"
+            (testMigrationStateTable
             "api-bench/sha.a1d5337305630db051fac6da5f8038abf4067068.sqlite"
+            sharedStateTable)
+        it "'migrate' db sequential table"
+            (testMigrationStateTable
+            "api-bench/she.1ceb45b37a94c7022837b5ca14045f11a5927c65.sqlite"
+            seqStateTable)
 
-testMigrationStateTable :: FilePath -> IO ()
-testMigrationStateTable dbName = do
+testMigrationStateTable :: FilePath -> Text -> IO ()
+testMigrationStateTable dbName sql = do
     let performMigrations path =
             runMigrations (newMigrationInterface nullTracer)
                 path migratePrologue
@@ -43,12 +51,12 @@ testMigrationStateTable dbName = do
                 _ <- test path False
                 performMigrations path
                 test path True
-    testOnCopiedAndMigrated testSeqStateColumnExists
+    testOnCopiedAndMigrated (testStateColumnExists sql)
 
     where
-        testSeqStateColumnExists path result = do
+        testStateColumnExists sql path result = do
             row <- Sqlite.runSqlite (T.pack path) $
-                    Sqlite.rawSql seqStateTable []
+                    Sqlite.rawSql sql []
             let isPresent = case row of
                  [Single txt]
                      | "change_addr_mode" `T.isInfixOf` txt -> True
@@ -56,12 +64,24 @@ testMigrationStateTable dbName = do
                  _ -> False
             isPresent `shouldBe` result
 
-        seqStateTable = [i|
-            SELECT
-                sql
-            FROM
-                sqlite_master
-            WHERE
-                type = 'table' AND
-                name = 'seq_state';
-            |]
+seqStateTable :: Text
+seqStateTable = [i|
+    SELECT
+        sql
+    FROM
+        sqlite_master
+    WHERE
+        type = 'table' AND
+        name = 'seq_state';
+    |]
+
+sharedStateTable :: Text
+sharedStateTable = [i|
+    SELECT
+        sql
+    FROM
+        sqlite_master
+    WHERE
+        type = 'table' AND
+        name = 'shared_state';
+    |]
