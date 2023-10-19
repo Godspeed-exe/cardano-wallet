@@ -1,7 +1,5 @@
 {-# LANGUAGE DataKinds #-}
-{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeApplications #-}
 
 module Cardano.Wallet.DB.Store.Checkpoints.Migration
     ( migratePrologue
@@ -21,7 +19,7 @@ import Cardano.DB.Sqlite
 import Cardano.Wallet.DB.Migration
     ( Migration, mkMigration )
 import Cardano.Wallet.DB.Sqlite.Migration.Old
-    ( SqlColumnStatus (..), isFieldPresent )
+    ( SqlColumnStatus (..), isFieldPresent, isTablePresentByName )
 import Cardano.Wallet.DB.Sqlite.Schema
     ( EntityField (..) )
 import Control.Monad
@@ -34,23 +32,26 @@ import Data.Text
 import qualified Data.Text as T
 import qualified Database.Sqlite as Sqlite
 
+
 migratePrologue
     :: Migration (ReadDBHandle IO) 3 4
 migratePrologue = mkMigration changeAddrMigration
   where
     changeAddrMigration = do
-        let sharedWid = DBField SharedStateWalletId
-            seqWid= DBField SeqStateWalletId
-            defaultValue = "FALSE"
+        let defaultValue = "FALSE"
         conn <- asks dbConn
-        r1 <- liftIO $ isFieldPresent conn seqWid
-        r2 <- liftIO $ isFieldPresent conn sharedWid
+        r1 <- liftIO $ isTablePresentByName conn "seq_state"
+        r2 <- liftIO $ isTablePresentByName conn "shared_state"
         case (r1, r2) of
-            (ColumnPresent, ColumnMissing) -> withReaderT dbBackend $ do
+            (True, False) -> withReaderT dbBackend $ do
                 liftIO $ addColumn_ conn True (DBField SeqStateChangeAddrMode) defaultValue
-            (ColumnMissing, ColumnPresent) -> withReaderT dbBackend $ do
+            (False, True) -> withReaderT dbBackend $ do
                 liftIO $ addColumn_ conn True (DBField SharedStateChangeAddrMode) defaultValue
-            _ ->
+            (True, True) -> withReaderT dbBackend $ do
+                liftIO $ addColumn_ conn True (DBField SeqStateChangeAddrMode) defaultValue
+                liftIO $ addColumn_ conn True (DBField SharedStateChangeAddrMode) defaultValue
+
+            _ -> do
                 return ()
 
 addColumn_
