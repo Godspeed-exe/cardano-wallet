@@ -35,28 +35,34 @@ spec =
         it "'migrate' db shared table"
             (testMigrationStateTable
             "api-bench/sha.a1d5337305630db051fac6da5f8038abf4067068.sqlite"
-            sharedStateTable)
+            sharedStateTable
+            (False, True))
         it "'migrate' db sequential table"
             (testMigrationStateTable
             "api-bench/she.1ceb45b37a94c7022837b5ca14045f11a5927c65.sqlite"
-            seqStateTable)
+            seqStateTable
+            (False, True))
+        it "'migrate' db byron table"
+            (testMigrationStateTable
+            "api-bench/rnd.423b423718660431ebfe9c761cd72e64ee5065ac.sqlite"
+            rndStateTable
+            (False, False))
 
-testMigrationStateTable :: FilePath -> Text -> IO ()
-testMigrationStateTable dbName sql = do
+testMigrationStateTable :: FilePath -> Text -> (Bool, Bool) -> IO ()
+testMigrationStateTable dbName sql (expBefore, expAfter) = do
     let performMigrations path =
             runMigrations (newMigrationInterface nullTracer)
                 path migratePrologue
         testOnCopiedAndMigrated test = fmap snd
             $ withinCopiedFile dbName $ \path _  -> do
-                _ <- test path False
+                _ <- test path expBefore
                 performMigrations path
-                test path True
+                test path expAfter
     testOnCopiedAndMigrated (testStateColumnExists sql)
-
-    where
-        testStateColumnExists sql path result = do
+  where
+        testStateColumnExists sql' path result = do
             row <- Sqlite.runSqlite (T.pack path) $
-                    Sqlite.rawSql sql []
+                    Sqlite.rawSql sql' []
             let isPresent = case row of
                  [Single txt]
                      | "change_addr_mode" `T.isInfixOf` txt -> True
@@ -84,4 +90,15 @@ sharedStateTable = [i|
     WHERE
         type = 'table' AND
         name = 'shared_state';
+    |]
+
+rndStateTable :: Text
+rndStateTable = [i|
+    SELECT
+        sql
+    FROM
+        sqlite_master
+    WHERE
+        type = 'table' AND
+        name = 'rnd_state';
     |]
