@@ -16,6 +16,7 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 -- {-# OPTIONS_GHC -Wno-ambiguous-fields #-}
 {-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
+{-# OPTIONS_GHC -Wno-ambiguous-fields #-}
 
 -- |
 -- Copyright: © 2018-2020 IOHK
